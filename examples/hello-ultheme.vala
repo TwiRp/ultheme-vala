@@ -7,6 +7,7 @@ public static int main (string[] args) {
     }
 
     var ultheme = new Ultheme.Parser (File.new_for_path (args[1]));
+    print (ultheme.get_dark_theme ());
 
     return 0;
 }
