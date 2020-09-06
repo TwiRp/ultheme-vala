@@ -1,4 +1,5 @@
 using Clutter;
+using Gee;
 
 errordomain IOError {
     FILE_NOT_FOUND,
@@ -15,6 +16,7 @@ namespace Ultheme {
         private ThemeColors _light_theme;
         private File _file;
         private string _xml_buffer;
+        private HashMap<string, StyleTargets> _style_map;
 
         public Parser (File file) throws Error {
             _file = file;
@@ -31,6 +33,20 @@ namespace Ultheme {
 
             _dark_theme = new ThemeColors ();
             _light_theme = new ThemeColors ();
+
+            // Map from Ultheme item definitions to style names
+            _style_map = new HashMap<string, StyleTargets> ();
+            _style_map.set ("heading1", new StyleTargets({ "markdown:header", "def:type", "def:heading" }));
+            _style_map.set ("codeblock", new StyleTargets({ "markdown:code-block", }));
+            _style_map.set ("code", new StyleTargets({ "markdown:code", "def:identifier", "markdown:code-span" }));
+            _style_map.set ("comment", new StyleTargets({ "markdown:backslash-escape", "def:special-char" }));
+            _style_map.set ("blockquote", new StyleTargets({ "markdown:blockquote-marker", "def:shebang" }));
+            _style_map.set ("link", new StyleTargets({ "markdown:link-text", "markdown:url", "markdown:label", "markdown:attribute-value", "def:underlined", "def:comment", "def:preprocessor", "def:constant" }));
+            _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break" }));
+            _style_map.set ("orderedList", new StyleTargets({ "markdown:list-marker", "def:statement" }));
+            _style_map.set ("image", new StyleTargets({ "markdown:image-marker", }));
+            _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element" }));
+            _style_map.set ("strong", new StyleTargets({ "markdown:strong-emphasis", "def:statement" }));
 
             read_theme ();
         }
@@ -61,6 +77,23 @@ namespace Ultheme {
                 throw new IOError.FILE_NOT_VALID_THEME (
                     "Theme has invalid number of palettes");
             }
+
+            for (int p = 0; p < palettes.length; p += 1) {
+                GXml.DomElement palette = palettes.get_element (p);
+                string? mode = palette.get_attribute ("mode");
+                if ((mode == null) || (mode == "light")) {
+                    read_palette (palette, _light_theme, "colorsLight");
+                } else {
+                    read_palette (palette, _light_theme, "colorsDark");
+                }
+            }
+        }
+
+        private void read_palette (
+            GXml.DomElement palette,
+            ThemeColors color_theme,
+            string color_attr)
+        {
 
         }
 
@@ -137,9 +170,18 @@ namespace Ultheme {
             Color foreground;
             Color background;
             Color[] _colors;
+            HashMap<string, Attribute> elements;
 
             public ThemeColors () {
                 valid = false;
+                elements = new HashMap<string, Attribute> ();
+            }
+        }
+
+        private class StyleTargets {
+            public string[] targets;
+            public StyleTargets (string[] classes) {
+                targets = classes;
             }
         }
     }
