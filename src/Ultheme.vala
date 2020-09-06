@@ -78,23 +78,90 @@ namespace Ultheme {
                     "Theme has invalid number of palettes");
             }
 
+            GXml.DomHTMLCollection item_definitions = theme_root.get_elements_by_tag_name ("item");
+            if ((item_definitions.length == 0) || (item_definitions.length < 8)) {
+                throw new IOError.FILE_NOT_VALID_THEME (
+                    "Theme is missing markdown style definitions");
+            }
+
             for (int p = 0; p < palettes.length; p += 1) {
                 GXml.DomElement palette = palettes.get_element (p);
                 string? mode = palette.get_attribute ("mode");
+                GXml.DomHTMLCollection colors = palette.get_elements_by_tag_name ("color");
+
+                if ((colors.length == 0) || (colors.length < 4)) {
+                    throw new IOError.FILE_NOT_VALID_THEME (
+                        "Theme is missing color definitions");
+                }
+
                 if ((mode == null) || (mode == "light")) {
-                    read_palette (palette, _light_theme, "colorsLight");
+                    read_palette (colors, item_definitions, _light_theme, "colorsLight");
                 } else {
-                    read_palette (palette, _light_theme, "colorsDark");
+                    read_palette (colors, item_definitions, _light_theme, "colorsDark");
                 }
             }
         }
 
         private void read_palette (
-            GXml.DomElement palette,
+            GXml.DomHTMLCollection colors,
+            GXml.DomHTMLCollection item_definitions,
             ThemeColors color_theme,
-            string color_attr)
+            string color_attr) throws Error 
         {
+            // Read the color palette
+            for (int c = 0; c < colors.length; c += 1) {
+                GXml.DomElement color = colors.get_element (c);
+                string? color_value = color.get_attribute ("value");
+                if (color_value == null) {
+                    throw new IOError.FILE_NOT_VALID_THEME (
+                        "Theme is missing value for color");
+                }
 
+                // Clutter.Color requires # prefix
+                if (!color_value.has_prefix ("#")) {
+                    color_value = "#" + color_value;
+                }
+
+                Color read_color = Color.from_string (color_value);
+
+                // Default foreground and background are not part of
+                // the colors used in the item definitions
+                if (color.has_attribute ("identifier")) {
+                    string? identifier = color.get_attribute ("value");
+                    if (identifier == "foreground") {
+                        color_theme.foreground = read_color;
+                    } else {
+                        color_theme.background = read_color;
+                    }
+                } else {
+                    color_theme._colors += read_color;
+                }
+            }
+
+            // Read the style definitions
+            for (int s = 0; s < item_definitions.length; s += 1) {
+                GXml.DomElement item = item_definitions.get_element (s);
+                string? color_def = item.get_attribute(color_attr);
+                string? traits = item.get_attribute("traits");
+                Attribute attr = new Attribute ();
+
+                // Set styling
+                if (traits.contains ("bold")) {
+                    attr.is_bold = true;
+                }
+                if (traits.contains ("italic")) {
+                    attr.is_italic = true;
+                }
+                if (traits.contains ("strikethrough")) {
+                    attr.is_strikethrough = true;
+                }
+                if (traits.contains ("underline")) {
+                    attr.is_underline = true;
+                }
+
+                // Color math
+                string[] color_opt = color_def.split (";");
+            }
         }
 
         private void read_archive () throws Error {
@@ -157,20 +224,27 @@ namespace Ultheme {
         }
 
         private class Attribute {
-            Color foreground;
-            Color background;
-            bool is_bold;
-            bool is_italic;
-            bool is_underline;
-            bool is_strikethrough;
+            public Color foreground;
+            public Color background;
+            public bool is_bold;
+            public bool is_italic;
+            public bool is_underline;
+            public bool is_strikethrough;
+
+            public Attribute () {
+                is_bold = false;
+                is_italic = false;
+                is_underline = false;
+                is_strikethrough = false;
+            }
         }
 
         private class ThemeColors {
-            bool valid;
-            Color foreground;
-            Color background;
-            Color[] _colors;
-            HashMap<string, Attribute> elements;
+            public bool valid;
+            public Color foreground;
+            public Color background;
+            public Color[] _colors;
+            public HashMap<string, Attribute> elements;
 
             public ThemeColors () {
                 valid = false;
