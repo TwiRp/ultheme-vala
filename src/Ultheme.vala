@@ -205,6 +205,21 @@ namespace Ultheme {
                     bg_shade = 0;
                 }
 
+                // Prevent colors that are too close
+                if (fg_color == bg_color && fg_shade == bg_shade) {
+                    if (color_opt.length >= 2 &&
+                        !read_color (out bg_color, out bg_shade, color_opt[1]) ||
+                        (fg_color == bg_color && fg_shade == bg_shade))
+                    {
+                        bg_color = -1;
+                        bg_shade = 0;
+                    }
+                    else
+                    {
+                        bg_shade *= -1;
+                    }
+                }
+
                 Color foreground = color_theme.foreground;
                 Color background = color_theme.background;
                 // Check for using default
@@ -226,12 +241,12 @@ namespace Ultheme {
             Color res = original;
             while (shade != 0) {
                 if (shade < 0) {
-                    shade++;
+                    shade /= 2;
                     res = res.darken ();
                 }
 
                 if (shade > 0) {
-                    shade--;
+                    shade /= 2;
                     res = res.lighten ();
                 }
             }
