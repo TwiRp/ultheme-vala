@@ -1,6 +1,6 @@
 if get_option('enable_examples')
 
-  example_deps = ultheme_deps + [ ultheme_dep ]
+  example_deps = libultheme_deps + [ libultheme_dep ]
 
   executable('hello-ultheme', 'hello-ultheme.vala',
     dependencies: example_deps,
