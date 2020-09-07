@@ -14,7 +14,7 @@ gio_dep = dependency('gio-2.0')
 clutter_dep = dependency('clutter-1.0')
 gee_dep = dependency('gee-0.8')
 
-ultheme_deps = [
+libultheme_deps = [
   gobject_dep,
   archive_dep,
   gio_dep,

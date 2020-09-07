@@ -4,13 +4,13 @@ else
   libtype = 'static_library'
 endif
 
-ultheme_sources = [
+libultheme_sources = [
   'Ultheme.vala',
 ]
 
-ultheme = build_target('ultheme',
-       sources: ultheme_sources,
-  dependencies: ultheme_deps,
+libultheme = build_target('ultheme',
+       sources: libultheme_sources,
+  dependencies: libultheme_deps,
    target_type: libtype,
    vala_header: 'ultheme.h',
      vala_vapi: 'ultheme.vapi',
@@ -18,14 +18,14 @@ ultheme = build_target('ultheme',
        install: true,
 )
 
-ultheme_dep = declare_dependency(
+libultheme_dep = declare_dependency(
   include_directories: include_directories('.'),
-            link_with: ultheme,
+            link_with: libultheme,
 )
 
 pkg = import('pkgconfig')
 pkg.generate(
-    libraries: ultheme,
+    libraries: libultheme,
       version: meson.project_version(),
          name: 'ultheme',
   description: 'Convert Ulysses Themes to GtkSourceView Markdown Styles',
