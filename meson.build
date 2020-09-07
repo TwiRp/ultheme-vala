@@ -1,4 +1,4 @@
-project('libultheme', ['vala', 'c'],
+project('ultheme', ['vala', 'c'],
   default_options: [
     'buildtype=release',
     'default_library=shared',
