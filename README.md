@@ -17,7 +17,7 @@ libxml2-dev
 
 ## Usage
 
-### vala-ultheme.wrap
+### ultheme.wrap
 ```
 [wrap-git]
 directory=vala-ultheme
@@ -25,12 +25,13 @@ url=https://github.com/TwiRp/ultheme-vala.git
 revision=master
 ```
 
-Place the `vala-ultheme.wrap` in subprojects directory in your project.
+Place the `ultheme.wrap` in subprojects directory in your project.
 
 In your meson.build, add:
 
 ```
-ultheme_dep = dependency('vala-ultheme-0.1', fallback : [ 'vala-ultheme', 'libultheme_dep' ])
+ultheme_dep = dependency('ultheme-0.1', fallback : [ 'ultheme', 'libultheme_dep' ])
+gxml_dep = dependency('gxml-0.18', fallback : [ 'gxml', 'libgxml_dep' ])
 ```
 
-Then add ultheme_dep to your dependencies.
+Then add ultheme_dep, gxml_dep, and dependency('clutter-1.0') to your dependencies.
