@@ -206,12 +206,13 @@ namespace Ultheme {
                 //
 
                 bool using2 = false;
-                if (!read_color (out fg_color, out fg_shade, color_opt[0]) &&
-                    color_opt.length >= 2
-                    || (fg_color < 0 && fg_color >= color_theme._colors.length))
+                // Check for font color
+                if (!read_color (out fg_color, out fg_shade, color_opt[0])
+                    || (fg_color < 0 || fg_color >= color_theme._colors.length))
                 {
+                    // No font color, use symbol color
                     if (!read_color (out fg_color, out fg_shade, color_opt[1]) ||
-                        (fg_color < 0 && fg_color >= color_theme._colors.length))
+                        (fg_color < 0 || fg_color >= color_theme._colors.length))
                     {
                         fg_color = -1;
                         fg_shade = 0;
@@ -220,31 +221,31 @@ namespace Ultheme {
                     }
                 }
 
-                if (using2 || (color_opt.length >= 2 &&
-                    !read_color (out bg_color, out bg_shade, color_opt[1]) ||
-                    (bg_color < 0 && bg_color >= color_theme._colors.length)))
+                // Attempt to set background color
+                if ((color_opt.length >= 3 &&
+                    !read_color (out bg_color, out bg_shade, color_opt[2]) ||
+                    (bg_color < 0 || bg_color >= color_theme._colors.length)))
                 {
                     bg_color = -1;
                     bg_shade = 0;
-                } else {
-                    if (bg_shade > 0) {
-                        bg_shade *= -1;
-                    }
                 }
 
                 // Prevent colors that are too close
                 if (!using2 || (fg_color == bg_color && fg_shade == bg_shade)) {
-                    if (color_opt.length >= 3 &&
-                        !read_color (out bg_color, out bg_shade, color_opt[2]) ||
+                    if (color_opt.length >= 2 &&
+                        !read_color (out bg_color, out bg_shade, color_opt[1]) ||
                         (fg_color == bg_color && fg_shade == bg_shade))
                     {
                         bg_color = -1;
                         bg_shade = 0;
                     }
-                    //  else
-                    //  {
-                    //      bg_shade *= -1;
-                    //  }
+                    else
+                    {
+                        if (bg_shade > 0)
+                        {
+                            bg_shade *= -1;
+                        }
+                    }
                 }
 
                 if (color_opt[2] == "") {
@@ -255,10 +256,10 @@ namespace Ultheme {
                 Color background = color_theme.background;
                 // Check for using default
                 if (fg_color >= 0 && fg_color < color_theme._colors.length) {
-                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"));
+                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"), false);
                 }
                 if (bg_color >= 0 && bg_color < color_theme._colors.length) {
-                    background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"));
+                    background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"), true);
                 }
 
                 attr.foreground = foreground;
@@ -268,10 +269,10 @@ namespace Ultheme {
             }
         }
 
-        private Color make_color (Color original, int shade, Color theme_bg, bool lighten) {
+        private Color make_color (Color original, int shade, Color theme_bg, bool lighten, bool is_bg) {
             Color res = original;
 
-            if (shade > 0) {
+            if (shade >= 0) {
                 while (shade > 0) {
                     if (lighten) {
                         res = res.lighten ();
@@ -281,8 +282,9 @@ namespace Ultheme {
                     shade -= 2;
                 }
             } else {
+                // shade = 5 - shade;
                 double progress = ((double) (shade.abs ())) / 6.0;
-                res = original.interpolate (theme_bg, progress);
+                res = res.interpolate (theme_bg, progress);
             }
 
             return res;
