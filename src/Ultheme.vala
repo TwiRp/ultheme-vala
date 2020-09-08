@@ -207,8 +207,7 @@ namespace Ultheme {
 
                 bool using2 = false;
                 // Check for font color
-                if (!read_color (out fg_color, out fg_shade, color_opt[0])
-                    || (fg_color < 0 || fg_color >= color_theme._colors.length))
+                if (!read_color (out fg_color, out fg_shade, color_opt[0]))
                 {
                     // No font color, use symbol color
                     if (!read_color (out fg_color, out fg_shade, color_opt[1]) ||
@@ -222,9 +221,8 @@ namespace Ultheme {
                 }
 
                 // Attempt to set background color
-                if ((color_opt.length >= 3 &&
-                    !read_color (out bg_color, out bg_shade, color_opt[2]) ||
-                    (bg_color < 0 || bg_color >= color_theme._colors.length)))
+                if (color_opt.length >= 3 &&
+                    !read_color (out bg_color, out bg_shade, color_opt[2]))
                 {
                     bg_color = -1;
                     bg_shade = 0;
@@ -257,15 +255,36 @@ namespace Ultheme {
                 // Check for using default
                 if (fg_color >= 0 && fg_color < color_theme._colors.length) {
                     foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"), false);
+                } else {
+                    foreground = make_color_shade (fg_color, fg_shade, color_theme.foreground, color_theme.background);
                 }
                 if (bg_color >= 0 && bg_color < color_theme._colors.length) {
                     background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"), true);
+                } else {
+                    background = make_color_shade (bg_color, bg_shade, color_theme.foreground, color_theme.background);
                 }
 
                 attr.foreground = foreground;
                 attr.background = background;
 
                 color_theme.elements.set (definition, attr);
+            }
+        }
+
+        private Color make_color_shade (int color, int shade, Color theme_fg, Color theme_bg) {
+            // For special values
+            Color white = Color.from_string ("#ffffffff");
+            Color black = Color.from_string ("#000000ff");
+
+            if (color == 4096) {
+            } else {
+                shade *= -1;
+            }
+            double percentage = ((double)(shade.abs () - 10)) / 10.0;
+            if (shade > 0) {
+                return black.interpolate (white, percentage);
+            } else {
+                return white.interpolate (black, percentage);
             }
         }
 
