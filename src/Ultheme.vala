@@ -234,20 +234,20 @@ namespace Ultheme {
                         bg_color = -1;
                         bg_shade = 0;
                     }
-                    else
-                    {
-                        bg_shade *= -1;
-                    }
+                    //  else
+                    //  {
+                    //      bg_shade *= -1;
+                    //  }
                 }
 
                 Color foreground = color_theme.foreground;
                 Color background = color_theme.background;
                 // Check for using default
                 if (fg_color >= 0 && fg_color < color_theme._colors.length) {
-                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_attr.down ().contains ("dark"));
+                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"));
                 }
                 if (bg_color >= 0 && bg_color < color_theme._colors.length) {
-                    background = make_color (color_theme._colors[bg_color], bg_shade, color_attr.down ().contains ("dark"));
+                    background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"));
                 }
 
                 attr.foreground = foreground;
@@ -257,29 +257,21 @@ namespace Ultheme {
             }
         }
 
-        private Color make_color (Color original, int shade, bool is_dark) {
+        private Color make_color (Color original, int shade, Color theme_bg, bool lighten) {
             Color res = original;
 
-            //  if (shade < 0) {
-            //      while (shade < 0) {
-            //          shade += 2;
-            //          res = res.darken ();
-            //      }
-            //  } else {
-            //      while (shade > 0) {
-            //          shade -= 2;
-            //          res = res.lighten ();
-            //      }
-            //  }
-            while (shade != 0) {
-                if (shade < 0) {
-                    res = res.darken ();
+            if (shade > 0) {
+                while (shade > 0) {
+                    if (lighten) {
+                        res = res.lighten ();
+                    } else {
+                        res = res.darken ();
+                    }
+                    shade -= 2;
                 }
-
-                if (shade > 0) {
-                    res = res.lighten ();
-                }
-                shade /=2;
+            } else {
+                double progress = ((double) (shade * -1)) / 6.0;
+                res = original.interpolate (theme_bg, progress);
             }
 
             return res;

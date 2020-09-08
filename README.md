@@ -1,6 +1,6 @@
 # ultheme Parser for Vala
 
-![](dracula_example.png)
+![](example.png)
 
 Port of [Ulysses2SourceView](https://github.com/kmwallio/Ulysses2SourceView) in Vala Library form. With a few fixes and a few more bugs.
 
