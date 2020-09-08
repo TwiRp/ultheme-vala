@@ -205,6 +205,7 @@ namespace Ultheme {
                 // Omission of a pair implies to use the default fg or bg
                 //
 
+                bool using2 = false;
                 if (!read_color (out fg_color, out fg_shade, color_opt[0]) &&
                     color_opt.length >= 2
                     || (fg_color < 0 && fg_color >= color_theme._colors.length))
@@ -214,21 +215,27 @@ namespace Ultheme {
                     {
                         fg_color = -1;
                         fg_shade = 0;
+                    } else {
+                        using2 = true;
                     }
                 }
 
-                if (color_opt.length >= 3 &&
-                    !read_color (out bg_color, out bg_shade, color_opt[2]) ||
-                    (bg_color < 0 && bg_color >= color_theme._colors.length))
+                if (using2 || (color_opt.length >= 2 &&
+                    !read_color (out bg_color, out bg_shade, color_opt[1]) ||
+                    (bg_color < 0 && bg_color >= color_theme._colors.length)))
                 {
                     bg_color = -1;
                     bg_shade = 0;
+                } else {
+                    if (bg_shade > 0) {
+                        bg_shade *= -1;
+                    }
                 }
 
                 // Prevent colors that are too close
-                if (fg_color == bg_color && fg_shade == bg_shade) {
-                    if (color_opt.length >= 2 &&
-                        !read_color (out bg_color, out bg_shade, color_opt[1]) ||
+                if (!using2 || (fg_color == bg_color && fg_shade == bg_shade)) {
+                    if (color_opt.length >= 3 &&
+                        !read_color (out bg_color, out bg_shade, color_opt[2]) ||
                         (fg_color == bg_color && fg_shade == bg_shade))
                     {
                         bg_color = -1;
@@ -238,6 +245,10 @@ namespace Ultheme {
                     //  {
                     //      bg_shade *= -1;
                     //  }
+                }
+
+                if (color_opt[2] == "") {
+                    bg_color = -1;
                 }
 
                 Color foreground = color_theme.foreground;
@@ -270,7 +281,7 @@ namespace Ultheme {
                     shade -= 2;
                 }
             } else {
-                double progress = ((double) (shade * -1)) / 6.0;
+                double progress = ((double) (shade.abs ())) / 6.0;
                 res = original.interpolate (theme_bg, progress);
             }
 
@@ -279,6 +290,12 @@ namespace Ultheme {
 
         private bool read_color (out int color, out int shade, string option) {
             bool res = true;
+            color = -1;
+            shade = 0;
+            if (option == null || option == "" || !option.contains (",")) {
+                return false;
+            }
+
             string[] color_prop = option.split (",");
             if (color_prop.length < 2) {
                 return false;
