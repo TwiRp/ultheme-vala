@@ -8,6 +8,26 @@ errordomain IOError {
 }
 
 namespace Ultheme {
+    public class HexColorPair {
+        public string foreground { get; set; }
+        public string background { get; set; }
+    }
+
+    public class HexColorPalette {
+        public HexColorPair global { get; set; }
+        public HexColorPair headers { get; set; }
+        public HexColorPair code_block { get; set; }
+        public HexColorPair inline_code { get; set; }
+        public HexColorPair escape_char { get; set; }
+        public HexColorPair blockquote { get; set; }
+        public HexColorPair link { get; set; }
+        public HexColorPair divider { get; set; }
+        public HexColorPair list_marker { get; set; }
+        public HexColorPair image_marker { get; set; }
+        public HexColorPair emphasis { get; set; }
+        public HexColorPair strong { get; set; }
+    }
+
     public class Parser {
         private string _author;
         private string _name;
@@ -224,10 +244,10 @@ namespace Ultheme {
                 Color background = color_theme.background;
                 // Check for using default
                 if (fg_color >= 0 && fg_color < color_theme._colors.length) {
-                    foreground = make_color (color_theme._colors[fg_color], fg_shade);
+                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_attr.down ().contains ("dark"));
                 }
                 if (bg_color >= 0 && bg_color < color_theme._colors.length) {
-                    background = make_color (color_theme._colors[bg_color], bg_shade);
+                    background = make_color (color_theme._colors[bg_color], bg_shade, color_attr.down ().contains ("dark"));
                 }
 
                 attr.foreground = foreground;
@@ -237,18 +257,29 @@ namespace Ultheme {
             }
         }
 
-        private Color make_color (Color original, int shade) {
+        private Color make_color (Color original, int shade, bool is_dark) {
             Color res = original;
+
+            //  if (shade < 0) {
+            //      while (shade < 0) {
+            //          shade += 2;
+            //          res = res.darken ();
+            //      }
+            //  } else {
+            //      while (shade > 0) {
+            //          shade -= 2;
+            //          res = res.lighten ();
+            //      }
+            //  }
             while (shade != 0) {
                 if (shade < 0) {
-                    shade /= 2;
                     res = res.darken ();
                 }
 
                 if (shade > 0) {
-                    shade /= 2;
                     res = res.lighten ();
                 }
+                shade /=2;
             }
 
             return res;
@@ -308,12 +339,105 @@ namespace Ultheme {
             archive.close ();
         }
 
+        public string get_theme_name () {
+            return _name;
+        }
+
         public string get_dark_theme () throws Error {
             return build_style ("Dark", _dark_theme, false);
         }
 
+        public string get_dark_theme_id () {
+            return "ulv-" + _name.down () + "-dark";
+        }
+
+        public HexColorPalette get_dark_theme_palette () {
+            return build_color_palette (_dark_theme);
+        }
+
         public string get_light_theme () throws Error {
             return build_style ("Light", _light_theme, true);
+        }
+
+        public string get_light_theme_id () {
+            return "ulv-" + _name.down () + "-light";
+        }
+
+        public HexColorPalette get_light_theme_palette () {
+            return build_color_palette (_light_theme);
+        }
+
+        private HexColorPalette build_color_palette (ThemeColors colors) {
+            HexColorPalette palette = new HexColorPalette ();
+            palette.global.foreground = colors.foreground_color ();
+            palette.global.background = colors.background_color ();
+            if (colors.elements.has_key ("heading1")) {
+                Attribute attr = colors.elements.get ("heading1");
+                palette.headers.foreground = attr.foreground_color ();
+                palette.headers.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("codeblock")) {
+                Attribute attr = colors.elements.get ("codeblock");
+                palette.code_block.foreground = attr.foreground_color ();
+                palette.code_block.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("code")) {
+                Attribute attr = colors.elements.get ("code");
+                palette.inline_code.foreground = attr.foreground_color ();
+                palette.inline_code.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("comment")) {
+                Attribute attr = colors.elements.get ("comment");
+                palette.escape_char.foreground = attr.foreground_color ();
+                palette.escape_char.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("blockquote")) {
+                Attribute attr = colors.elements.get ("blockquote");
+                palette.blockquote.foreground = attr.foreground_color ();
+                palette.blockquote.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("link")) {
+                Attribute attr = colors.elements.get ("link");
+                palette.link.foreground = attr.foreground_color ();
+                palette.link.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("divider")) {
+                Attribute attr = colors.elements.get ("divider");
+                palette.divider.foreground = attr.foreground_color ();
+                palette.divider.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("orderedList")) {
+                Attribute attr = colors.elements.get ("orderedList");
+                palette.list_marker.foreground = attr.foreground_color ();
+                palette.list_marker.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("image")) {
+                Attribute attr = colors.elements.get ("image");
+                palette.image_marker.foreground = attr.foreground_color ();
+                palette.image_marker.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("strong")) {
+                Attribute attr = colors.elements.get ("strong");
+                palette.strong.foreground = attr.foreground_color ();
+                palette.strong.background = attr.background_color ();
+            }
+
+            if (colors.elements.has_key ("emph")) {
+                Attribute attr = colors.elements.get ("emph");
+                palette.emphasis.foreground = attr.foreground_color ();
+                palette.emphasis.background = attr.background_color ();
+            }
+
+            return palette;
         }
 
         private string build_style (
@@ -409,7 +533,7 @@ namespace Ultheme {
                 "Could not read ultheme");
         }
 
-        public class Attribute {
+        private class Attribute {
             public Color foreground;
             public Color background;
             public bool is_bold;

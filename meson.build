@@ -1,6 +1,5 @@
 project('ultheme', ['vala', 'c'],
   default_options: [
-    'buildtype=release',
     'default_library=shared',
   ],
   version: '0.0.1'
