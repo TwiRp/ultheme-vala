@@ -400,8 +400,8 @@ namespace Ultheme {
             palette = new HexColorPalette ();
             palette.global.foreground = colors.foreground_color ();
             palette.global.background = colors.background_color ();
-            palette.global_active.foreground = colors.selection_fg_color (!darken, 1);
-            palette.global_active.background = colors.selection_bg_color (darken, 2);
+            palette.global_active.foreground = colors.selection_fg_color (darken, 1);
+            palette.global_active.background = colors.selection_bg_color (darken, 1);
             if (colors.elements.has_key ("heading1")) {
                 Attribute attr = colors.elements.get ("heading1");
                 palette.headers.foreground = attr.foreground_color ();
