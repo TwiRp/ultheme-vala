@@ -82,7 +82,7 @@ namespace Ultheme {
             _style_map.set ("heading1", new StyleTargets({ "markdown:header", "def:type", "def:heading" }));
             _style_map.set ("codeblock", new StyleTargets({ "markdown:code-block" }));
             _style_map.set ("code", new StyleTargets({ "markdown:code", "def:identifier", "markdown:code-span", "xml:attribute-name" }));
-            _style_map.set ("comment", new StyleTargets({ "markdown:backslash-escape", "def:special-char" }));
+            _style_map.set ("comment", new StyleTargets({ "markdown:backslash-escape", "def:special-char", "def:comment", "xml:attribute-value", }));
             _style_map.set ("blockquote", new StyleTargets({ "markdown:blockquote-marker", "def:shebang", "markdown:blockquote" }));
             _style_map.set ("link", new StyleTargets({ "markdown:link-text", "markdown:url", "markdown:label", "markdown:attribute-value", "def:underlined", "def:preprocessor", "def:constant", "def:net-address", "def:link-destination", "def:type" }));
             _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break" }));
@@ -90,7 +90,6 @@ namespace Ultheme {
             _style_map.set ("image", new StyleTargets({ "markdown:image-marker", }));
             _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element" }));
             _style_map.set ("strong", new StyleTargets({ "markdown:strong-emphasis", "def:statement" }));
-            _style_map.set ("comment", new StyleTargets({ "def:comment" }));
             _style_map.set ("delete", new StyleTargets({ "def:deletion" }));
 
             read_theme ();
