@@ -15,6 +15,7 @@ namespace Ultheme {
 
     public class HexColorPalette {
         public HexColorPair global { get; set; }
+        public HexColorPair global_active { get; set; }
         public HexColorPair headers { get; set; }
         public HexColorPair code_block { get; set; }
         public HexColorPair inline_code { get; set; }
@@ -26,6 +27,22 @@ namespace Ultheme {
         public HexColorPair image_marker { get; set; }
         public HexColorPair emphasis { get; set; }
         public HexColorPair strong { get; set; }
+
+        public HexColorPalette () {
+            global = new HexColorPair ();
+            global_active = new HexColorPair ();
+            headers = new HexColorPair ();
+            code_block = new HexColorPair ();
+            inline_code = new HexColorPair ();
+            escape_char = new HexColorPair ();
+            blockquote = new HexColorPair ();
+            link = new HexColorPair ();
+            divider = new HexColorPair ();
+            list_marker = new HexColorPair ();
+            image_marker = new HexColorPair ();
+            emphasis = new HexColorPair ();
+            strong = new HexColorPair ();
+        }
     }
 
     public class Parser {
@@ -63,16 +80,18 @@ namespace Ultheme {
             // Map from Ultheme item definitions to style names
             _style_map = new HashMap<string, StyleTargets> ();
             _style_map.set ("heading1", new StyleTargets({ "markdown:header", "def:type", "def:heading" }));
-            _style_map.set ("codeblock", new StyleTargets({ "markdown:code-block", }));
-            _style_map.set ("code", new StyleTargets({ "markdown:code", "def:identifier", "markdown:code-span" }));
+            _style_map.set ("codeblock", new StyleTargets({ "markdown:code-block" }));
+            _style_map.set ("code", new StyleTargets({ "markdown:code", "def:identifier", "markdown:code-span", "xml:attribute-name" }));
             _style_map.set ("comment", new StyleTargets({ "markdown:backslash-escape", "def:special-char" }));
-            _style_map.set ("blockquote", new StyleTargets({ "markdown:blockquote-marker", "def:shebang" }));
-            _style_map.set ("link", new StyleTargets({ "markdown:link-text", "markdown:url", "markdown:label", "markdown:attribute-value", "def:underlined", "def:comment", "def:preprocessor", "def:constant" }));
+            _style_map.set ("blockquote", new StyleTargets({ "markdown:blockquote-marker", "def:shebang", "markdown:blockquote" }));
+            _style_map.set ("link", new StyleTargets({ "markdown:link-text", "markdown:url", "markdown:label", "markdown:attribute-value", "def:underlined", "def:preprocessor", "def:constant", "def:net-address", "def:link-destination", "def:type" }));
             _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break" }));
             _style_map.set ("orderedList", new StyleTargets({ "markdown:list-marker", "def:statement" }));
             _style_map.set ("image", new StyleTargets({ "markdown:image-marker", }));
             _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element" }));
             _style_map.set ("strong", new StyleTargets({ "markdown:strong-emphasis", "def:statement" }));
+            _style_map.set ("comment", new StyleTargets({ "def:comment" }));
+            _style_map.set ("delete", new StyleTargets({ "def:deletion" }));
 
             read_theme ();
         }
@@ -362,8 +381,8 @@ namespace Ultheme {
             return "ulv-" + _name.down () + "-dark";
         }
 
-        public HexColorPalette get_dark_theme_palette () {
-            return build_color_palette (_dark_theme);
+        public void get_dark_theme_palette (out HexColorPalette palette) {
+            build_color_palette (out palette, _dark_theme, false);
         }
 
         public string get_light_theme () throws Error {
@@ -374,14 +393,16 @@ namespace Ultheme {
             return "ulv-" + _name.down () + "-light";
         }
 
-        public HexColorPalette get_light_theme_palette () {
-            return build_color_palette (_light_theme);
+        public void get_light_theme_palette (out HexColorPalette palette) {
+            build_color_palette (out palette, _light_theme, true);
         }
 
-        private HexColorPalette build_color_palette (ThemeColors colors) {
-            HexColorPalette palette = new HexColorPalette ();
+        private void build_color_palette (out HexColorPalette palette, ThemeColors colors, bool darken) {
+            palette = new HexColorPalette ();
             palette.global.foreground = colors.foreground_color ();
             palette.global.background = colors.background_color ();
+            palette.global_active.foreground = colors.selection_fg_color (!darken, 1);
+            palette.global_active.background = colors.selection_bg_color (darken, 2);
             if (colors.elements.has_key ("heading1")) {
                 Attribute attr = colors.elements.get ("heading1");
                 palette.headers.foreground = attr.foreground_color ();
@@ -447,8 +468,6 @@ namespace Ultheme {
                 palette.emphasis.foreground = attr.foreground_color ();
                 palette.emphasis.background = attr.background_color ();
             }
-
-            return palette;
         }
 
         private string build_style (
