@@ -95,6 +95,10 @@ namespace Ultheme {
             read_theme ();
         }
 
+        public string base_file_name () {
+            return _file.get_basename ();
+        }
+
         private void read_theme () throws Error {
             GXml.Document doc = new GXml.Document.from_string (_xml_buffer);
             GXml.DomElement theme_root = doc.document_element;
