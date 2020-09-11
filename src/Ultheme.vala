@@ -488,8 +488,8 @@ namespace Ultheme {
             // Come up with additional stylings not in file
             GXml.DomElement selection = res.create_element ("style");
             selection.set_attribute ("name", "selection");
-            selection.set_attribute ("foreground", colors.selection_fg_color (!darken_selection, 1));
-            selection.set_attribute ("background", colors.selection_bg_color (darken_selection, 2));
+            selection.set_attribute ("foreground", colors.selection_fg_color (darken_selection, 1));
+            selection.set_attribute ("background", colors.selection_bg_color (darken_selection, 1));
             root.append_child (selection);
 
             GXml.DomElement current_line = res.create_element ("style");
