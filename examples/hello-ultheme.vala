@@ -273,6 +273,7 @@ public class HelloUltheme : Gtk.Application {
 Converted `theme`.
 *Emphasis*, **Strong**
 [link](http://github.com/twirp)
+> Blockquote
 """.printf (name);
         }
     }
