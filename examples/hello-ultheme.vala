@@ -234,7 +234,7 @@ public class HelloUltheme : Gtk.Application {
 
                     PreviewWidget dark_widget = new PreviewWidget ();
                     dark_widget.set_scheme (dark_theme_id);
-                    dark_widget.set_color_palette (new_styles.get_dark_theme_palette ());
+                    new_styles.get_dark_theme_palette (out dark_widget.palette);
                     dark_widget.set_text (preview_text);
                     preview_items.add (dark_widget);
                     print ("Added %s\n", dark_theme_id);
@@ -251,7 +251,7 @@ public class HelloUltheme : Gtk.Application {
 
                     PreviewWidget light_widget = new PreviewWidget ();
                     light_widget.set_scheme (light_theme_id);
-                    light_widget.set_color_palette (new_styles.get_light_theme_palette ());
+                    new_styles.get_light_theme_palette (out light_widget.palette);
                     light_widget.set_text (preview_text);
                     preview_items.add (light_widget);
                     print ("Added %s\n", light_theme_id);
@@ -282,7 +282,7 @@ Converted `theme`.
         private Gtk.SourceView view;
         private Gtk.SourceBuffer buffer;
         private string scheme_id;
-        private Ultheme.HexColorPalette palette;
+        public Ultheme.HexColorPalette palette;
         private const string SAMPLE_TEXT = """# Heading
 Body text.
 
