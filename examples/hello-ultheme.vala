@@ -275,6 +275,9 @@ Converted `theme`.
 [link](http://github.com/twirp)
 > Blockquote
 <span id="html-sample">HTML Text</span>
+```python
+print ("hello world")
+```
 """.printf (name);
         }
     }
