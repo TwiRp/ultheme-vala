@@ -95,6 +95,10 @@ namespace Ultheme {
             read_theme ();
         }
 
+        public string base_file_name () {
+            return _file.get_basename ();
+        }
+
         private void read_theme () throws Error {
             GXml.Document doc = new GXml.Document.from_string (_xml_buffer);
             GXml.DomElement theme_root = doc.document_element;
@@ -400,8 +404,8 @@ namespace Ultheme {
             palette = new HexColorPalette ();
             palette.global.foreground = colors.foreground_color ();
             palette.global.background = colors.background_color ();
-            palette.global_active.foreground = colors.selection_fg_color (!darken, 1);
-            palette.global_active.background = colors.selection_bg_color (darken, 2);
+            palette.global_active.foreground = colors.selection_fg_color (darken, 1);
+            palette.global_active.background = colors.selection_bg_color (darken, 1);
             if (colors.elements.has_key ("heading1")) {
                 Attribute attr = colors.elements.get ("heading1");
                 palette.headers.foreground = attr.foreground_color ();
@@ -508,8 +512,8 @@ namespace Ultheme {
             // Come up with additional stylings not in file
             GXml.DomElement selection = res.create_element ("style");
             selection.set_attribute ("name", "selection");
-            selection.set_attribute ("foreground", colors.selection_fg_color (!darken_selection, 1));
-            selection.set_attribute ("background", colors.selection_bg_color (darken_selection, 2));
+            selection.set_attribute ("foreground", colors.selection_fg_color (darken_selection, 1));
+            selection.set_attribute ("background", colors.selection_bg_color (darken_selection, 1));
             root.append_child (selection);
 
             GXml.DomElement current_line = res.create_element ("style");
