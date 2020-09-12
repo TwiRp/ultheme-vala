@@ -271,9 +271,10 @@ public class HelloUltheme : Gtk.Application {
         private string preview_text (string name) {
             return """# %s
 Converted `theme`.
-*Emphasis*, **Strong**
+*Emphasis*, **Strong**, ~~Deleted~~
 [link](http://github.com/twirp)
 > Blockquote
+<span id="html-sample">HTML Text</span>
 """.printf (name);
         }
     }
@@ -282,7 +283,7 @@ Converted `theme`.
         private Gtk.SourceView view;
         private Gtk.SourceBuffer buffer;
         private string scheme_id;
-        private Ultheme.HexColorPalette palette;
+        public Ultheme.HexColorPalette palette;
         private const string SAMPLE_TEXT = """# Heading
 Body text.
 
