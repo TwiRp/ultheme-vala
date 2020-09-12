@@ -693,16 +693,6 @@ namespace Ultheme {
 
                 return foreground_color ();
             }
-
-            public string heading_color () {
-                foreach (var entry in elements) {
-                    if (entry.key.has_prefix ("heading")) {
-                        return entry.value.foreground_color ();
-                    }
-                }
-
-                return foreground_color ();
-            }
         }
 
         private class StyleTargets {
