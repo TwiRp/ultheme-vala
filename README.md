@@ -38,7 +38,7 @@ Then add ultheme_dep, gxml_dep, and dependency('clutter-1.0') to your dependenci
 
 ### Parsing a Theme
 
-Download desired theme from [Ulysses Editor Themes](https://styles.ulysses.app/themes).
+Download desired theme from [Ulysses Editor Themes](https://styles.ulysses.app/themes), or build one with a [Theme Generator](https://github.com/ThiefMD/theme-generator).
 
 Themes contain both a light and dark version. To get the dark version, you can do:
 
