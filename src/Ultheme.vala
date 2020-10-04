@@ -253,21 +253,9 @@ namespace Ultheme {
                 }
 
                 // Prevent colors that are too close
-                if ((!using2 && (definition != "code")) || (fg_color == bg_color && fg_shade == bg_shade)) {
-                    if (color_opt.length >= 2 &&
-                        !read_color (out bg_color, out bg_shade, color_opt[1]) ||
-                        (fg_color == bg_color && fg_shade == bg_shade))
-                    {
-                        bg_color = -1;
-                        bg_shade = 0;
-                    }
-                    else
-                    {
-                        if (bg_shade > 0)
-                        {
-                            bg_shade *= -1;
-                        }
-                    }
+                if (fg_color == bg_color && fg_shade == bg_shade) {
+                    bg_color = -1;
+                    bg_shade = 0;
                 }
 
                 if (definition == "link" || definition == "blockquote") {
