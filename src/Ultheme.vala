@@ -8,43 +8,6 @@ errordomain IOError {
 }
 
 namespace Ultheme {
-    public class HexColorPair {
-        public string foreground { get; set; }
-        public string background { get; set; }
-    }
-
-    public class HexColorPalette {
-        public HexColorPair global { get; set; }
-        public HexColorPair global_active { get; set; }
-        public HexColorPair headers { get; set; }
-        public HexColorPair code_block { get; set; }
-        public HexColorPair inline_code { get; set; }
-        public HexColorPair escape_char { get; set; }
-        public HexColorPair blockquote { get; set; }
-        public HexColorPair link { get; set; }
-        public HexColorPair divider { get; set; }
-        public HexColorPair list_marker { get; set; }
-        public HexColorPair image_marker { get; set; }
-        public HexColorPair emphasis { get; set; }
-        public HexColorPair strong { get; set; }
-
-        public HexColorPalette () {
-            global = new HexColorPair ();
-            global_active = new HexColorPair ();
-            headers = new HexColorPair ();
-            code_block = new HexColorPair ();
-            inline_code = new HexColorPair ();
-            escape_char = new HexColorPair ();
-            blockquote = new HexColorPair ();
-            link = new HexColorPair ();
-            divider = new HexColorPair ();
-            list_marker = new HexColorPair ();
-            image_marker = new HexColorPair ();
-            emphasis = new HexColorPair ();
-            strong = new HexColorPair ();
-        }
-    }
-
     public class Parser {
         private string _author;
         private string _name;
@@ -100,188 +63,181 @@ namespace Ultheme {
         }
 
         private void read_theme () throws Error {
-            GXml.Document doc = new GXml.Document.from_string (_xml_buffer);
-            GXml.DomElement theme_root = doc.document_element;
-            string? frontmatter = theme_root.get_attribute ("author");
+            Xml.Doc* doc = Xml.Parser.parse_memory (_xml_buffer, _xml_buffer.length);
+            Xml.Node* theme_root = doc->get_root_element ();
+            string? frontmatter = theme_root->get_prop ("author");
             if (frontmatter != null) {
                 _author = frontmatter;
             }
 
-            frontmatter = theme_root.get_attribute ("displayName");
+            frontmatter = theme_root->get_prop ("displayName");
             if (frontmatter != null) {
                 _name = frontmatter;
             }
 
             // https://developer.gnome.org/gtksourceview/stable/style-reference.html
             // Version must be 1.0
-            //  frontmatter = theme_root.get_attribute ("version");
+            //  frontmatter = theme_root->get_prop ("version");
             //  if (frontmatter != null) {
             //      _version = frontmatter;
             //  }
 
-            // Read in color palettes
-            GXml.DomHTMLCollection palettes = theme_root.get_elements_by_tag_name ("palette");
-            if ((palettes.length == 0) || (palettes.length > 2)) {
-                throw new IOError.FILE_NOT_VALID_THEME (
-                    "Theme has invalid number of palettes");
-            }
-
-            GXml.DomHTMLCollection item_definitions = theme_root.get_elements_by_tag_name ("item");
-            if ((item_definitions.length == 0) || (item_definitions.length < 8)) {
-                throw new IOError.FILE_NOT_VALID_THEME (
-                    "Theme is missing markdown style definitions");
-            }
-
-            for (int p = 0; p < palettes.length; p += 1) {
-                GXml.DomElement palette = palettes.get_element (p);
-                string? mode = palette.get_attribute ("mode");
-                GXml.DomHTMLCollection colors = palette.get_elements_by_tag_name ("color");
-
-                if ((colors.length == 0) || (colors.length < 4)) {
-                    throw new IOError.FILE_NOT_VALID_THEME (
-                        "Theme is missing color definitions");
-                }
-
-                if ((mode == null) || (mode == "light")) {
-                    read_palette (colors, item_definitions, ref _light_theme, "colorsLight");
-                } else {
-                    read_palette (colors, item_definitions, ref _dark_theme, "colorsDark");
+            int read_in = 0;
+            for (Xml.Node* iter = theme_root->children; iter != null; iter = iter->next) {
+                if (iter->type == Xml.ElementType.ELEMENT_NODE) {
+                    if (iter->name == "palette") {
+                        string? mode = iter->get_prop ("mode");
+                        read_in++;
+                        if ((mode == null) || (mode == "light")) {
+                            read_palette (iter->children, theme_root, ref _light_theme, "colorsLight");
+                        } else {
+                            read_palette (iter->children, theme_root, ref _dark_theme, "colorsDark");
+                        }
+                    }
                 }
             }
+
+            delete doc;
         }
 
         private void read_palette (
-            GXml.DomHTMLCollection colors,
-            GXml.DomHTMLCollection item_definitions,
+            Xml.Node* colors,
+            Xml.Node* root,
             ref ThemeColors color_theme,
             string color_attr) throws Error 
         {
             // Read the color palette
-            for (int c = 0; c < colors.length; c += 1) {
-                GXml.DomElement color = colors.get_element (c);
-                string? color_value = color.get_attribute ("value");
-                if (color_value == null) {
-                    throw new IOError.FILE_NOT_VALID_THEME (
-                        "Theme is missing value for color");
-                }
+            for (Xml.Node* color = colors; color != null; color = color->next) {
+                if (color->type == Xml.ElementType.ELEMENT_NODE) {
+                    if (color->name == "color") {
+                        string? color_value = color->get_prop ("value");
+                        if (color_value == null) {
+                            throw new IOError.FILE_NOT_VALID_THEME (
+                                "Theme is missing value for color");
+                        }
 
-                // Clutter.Color requires # prefix
-                if (!color_value.has_prefix ("#")) {
-                    color_value = "#" + color_value;
-                }
+                        // Clutter.Color requires # prefix
+                        if (!color_value.has_prefix ("#")) {
+                            color_value = "#" + color_value;
+                        }
 
-                Color read_color = Color.from_string (color_value);
+                        Color read_color = Color.from_string (color_value);
 
-                // Default foreground and background are not part of
-                // the colors used in the item definitions
-                if (color.has_attribute ("identifier")) {
-                    string? identifier = color.get_attribute ("identifier");
-                    if (identifier.down () == "foreground") {
-                        color_theme.foreground = read_color;
-                    } else {
-                        color_theme.background = read_color;
+                        // Default foreground and background are not part of
+                        // the colors used in the item definitions
+                        string? identifier = color->get_prop ("identifier");
+                        if (identifier != null) {
+                            if (identifier.down () == "foreground") {
+                                color_theme.foreground = read_color;
+                            } else {
+                                color_theme.background = read_color;
+                            }
+                        } else {
+                            color_theme._colors += read_color;
+                        }
                     }
-                } else {
-                    color_theme._colors += read_color;
                 }
             }
 
             // print ("Theme fg: %s, gb: %s\n", color_theme.foreground_color (), color_theme.background_color ());
 
             // Read the style definitions
-            for (int s = 0; s < item_definitions.length; s += 1) {
-                GXml.DomElement item = item_definitions.get_element (s);
-                string? definition = item.get_attribute ("definition");
-                string? color_def = item.get_attribute (color_attr);
-                string? traits = item.get_attribute ("traits");
-                Attribute attr = new Attribute ();
+            for (Xml.Node* item = root->children; item != null; item = item->next) {
+                if (item->type == Xml.ElementType.ELEMENT_NODE) {
+                    if (item->name == "item") {
+                        string? definition = item->get_prop ("definition");
+                        string? color_def = item->get_prop (color_attr);
+                        string? traits = item->get_prop ("traits");
+                        Attribute attr = new Attribute ();
 
-                if (definition == null) {
-                    continue;
-                }
+                        if (definition == null) {
+                            continue;
+                        }
 
-                // Set styling
-                if (traits.contains ("bold")) {
-                    attr.is_bold = true;
-                }
-                if (traits.contains ("italic")) {
-                    attr.is_italic = true;
-                }
-                if (traits.contains ("strikethrough")) {
-                    attr.is_strikethrough = true;
-                }
-                if (traits.contains ("underline")) {
-                    attr.is_underline = true;
-                }
+                        // Set styling
+                        if (traits.contains ("bold")) {
+                            attr.is_bold = true;
+                        }
+                        if (traits.contains ("italic")) {
+                            attr.is_italic = true;
+                        }
+                        if (traits.contains ("strikethrough")) {
+                            attr.is_strikethrough = true;
+                        }
+                        if (traits.contains ("underline")) {
+                            attr.is_underline = true;
+                        }
 
-                // Color math
-                string[] color_opt = color_def.split (";");
-                int fg_color = 0;
-                int fg_shade = 0;
-                int bg_color = -1;
-                int bg_shade = -1;
+                        // Color math
+                        string[] color_opt = color_def.split (";");
+                        int fg_color = 0;
+                        int fg_shade = 0;
+                        int bg_color = -1;
+                        int bg_shade = -1;
 
-                //
-                // Color pairs seem to be text-color;markup-color;text-background
-                // Where colors are index,lighten/darken
-                // Omission of a pair implies to use the default fg or bg
-                //
+                        //
+                        // Color pairs seem to be text-color;markup-color;text-background
+                        // Where colors are index,lighten/darken
+                        // Omission of a pair implies to use the default fg or bg
+                        //
 
-                bool using2 = false;
-                // Check for font color
-                if (!read_color (out fg_color, out fg_shade, color_opt[0])
-                    || (fg_color < 0 || fg_color >= color_theme._colors.length))
-                {
-                    // No font color, use symbol color
-                    if (!read_color (out fg_color, out fg_shade, color_opt[1]) ||
-                        (fg_color < 0 || fg_color >= color_theme._colors.length))
-                    {
-                        fg_color = -1;
-                        fg_shade = 0;
-                    } else {
-                        using2 = true;
+                        bool using2 = false;
+                        // Check for font color
+                        if (!read_color (out fg_color, out fg_shade, color_opt[0])
+                            || (fg_color < 0 || fg_color >= color_theme._colors.length))
+                        {
+                            // No font color, use symbol color
+                            if (!read_color (out fg_color, out fg_shade, color_opt[1]) ||
+                                (fg_color < 0 || fg_color >= color_theme._colors.length))
+                            {
+                                fg_color = -1;
+                                fg_shade = 0;
+                            } else {
+                                using2 = true;
+                            }
+                        }
+
+                        // Attempt to set background color
+                        if ((color_opt.length >= 3 &&
+                            !read_color (out bg_color, out bg_shade, color_opt[2]) ||
+                            (bg_color < 0 || bg_color >= color_theme._colors.length)))
+                        {
+                            bg_color = -1;
+                            bg_shade = 0;
+                        }
+
+                        // Prevent colors that are too close
+                        if (fg_color == bg_color && fg_shade == bg_shade) {
+                            bg_color = -1;
+                            bg_shade = 0;
+                        }
+
+                        if (definition == "link" || definition == "blockquote") {
+                            if (bg_shade < 0 && bg_shade > -2) {
+                                bg_shade = (bg_shade + 6) * -1;
+                            }
+                        }
+
+                        if (color_opt[2] == "") {
+                            bg_color = -1;
+                        }
+
+                        Color foreground = color_theme.foreground;
+                        Color background = color_theme.background;
+                        // Check for using default
+                        if (fg_color >= 0 && fg_color < color_theme._colors.length) {
+                            foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"), false);
+                        }
+                        if (bg_color >= 0 && bg_color < color_theme._colors.length) {
+                            background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"), true);
+                        }
+
+                        attr.foreground = foreground;
+                        attr.background = background;
+
+                        color_theme.elements.set (definition, attr);
                     }
                 }
-
-                // Attempt to set background color
-                if ((color_opt.length >= 3 &&
-                    !read_color (out bg_color, out bg_shade, color_opt[2]) ||
-                    (bg_color < 0 || bg_color >= color_theme._colors.length)))
-                {
-                    bg_color = -1;
-                    bg_shade = 0;
-                }
-
-                // Prevent colors that are too close
-                if (fg_color == bg_color && fg_shade == bg_shade) {
-                    bg_color = -1;
-                    bg_shade = 0;
-                }
-
-                if (definition == "link" || definition == "blockquote") {
-                    if (bg_shade < 0 && bg_shade > -2) {
-                        bg_shade = (bg_shade + 6) * -1;
-                    }
-                }
-
-                if (color_opt[2] == "") {
-                    bg_color = -1;
-                }
-
-                Color foreground = color_theme.foreground;
-                Color background = color_theme.background;
-                // Check for using default
-                if (fg_color >= 0 && fg_color < color_theme._colors.length) {
-                    foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"), false);
-                }
-                if (bg_color >= 0 && bg_color < color_theme._colors.length) {
-                    background = make_color (color_theme._colors[bg_color], bg_shade, color_theme.background, color_attr.down ().contains ("dark"), true);
-                }
-
-                attr.foreground = foreground;
-                attr.background = background;
-
-                color_theme.elements.set (definition, attr);
             }
         }
 
@@ -472,53 +428,45 @@ namespace Ultheme {
             ThemeColors colors,
             bool darken_selection) throws Error {
             // print ("Generating theme\n");
-            GXml.DomDocument res = new GXml.Document ();
+            Xml.Doc* res = new Xml.Doc ("1.0");
+            Xml.Ns* ns = new Xml.Ns (null, "", null);
 
             // Create scheme
             // print ("Creating root\n");
-            GXml.DomElement root = res.create_element ("style-scheme");
-            root.set_attribute ("id", "ulv-" + _name.down () + "-" + name_suffix.down ());
-            root.set_attribute ("name", _name + "-" + name_suffix + "-ulv");
-            root.set_attribute ("version", _version);
-            res.append_child (root);
+            Xml.Node* root = new Xml.Node (ns, "style-scheme");
+            root->new_prop ("id", "ulv-" + _name.down () + "-" + name_suffix.down ());
+            root->new_prop ("name", _name + "-" + name_suffix + "-ulv");
+            root->new_prop ("version", _version);
+            res->set_root_element (root);
 
             // Add frontmatter
             // print ("Adding frontmatter\n");
-            GXml.DomElement author = res.create_element ("author");
-            GXml.DomText author_text = res.create_text_node (_author);
-            author.append_child (author_text);
-            root.append_child (author);
-
-            GXml.DomElement description = res.create_element ("description");
-            GXml.DomText description_text = res.create_text_node (
-                "Style Scheme converted from Ulysses Theme " + _name
-            );
-            description.append_child (description_text);
-            root.append_child (description);
+            root->new_text_child (ns, "author", _author);
+            root->new_text_child (ns, "description", "Style Scheme converted from Ulysses Theme " + _name);
 
             // Set default colors
-            GXml.DomElement text = res.create_element ("style");
-            text.set_attribute ("name", "text");
-            text.set_attribute ("foreground", colors.foreground_color ());
-            text.set_attribute ("background", colors.background_color ());
-            root.append_child (text);
+            Xml.Node* text = new Xml.Node (ns, "style");
+            text->new_prop ("name", "text");
+            text->new_prop ("foreground", colors.foreground_color ());
+            text->new_prop ("background", colors.background_color ());
+            root->add_child (text);
 
             // Come up with additional stylings not in file
-            GXml.DomElement selection = res.create_element ("style");
-            selection.set_attribute ("name", "selection");
-            selection.set_attribute ("foreground", colors.selection_fg_color (darken_selection, 1));
-            selection.set_attribute ("background", colors.selection_bg_color (darken_selection, 1));
-            root.append_child (selection);
+            Xml.Node* selection = new Xml.Node (ns, "style");
+            selection->new_prop ("name", "selection");
+            selection->new_prop ("foreground", colors.selection_fg_color (darken_selection, 1));
+            selection->new_prop ("background", colors.selection_bg_color (darken_selection, 1));
+            root->add_child (selection);
 
-            GXml.DomElement current_line = res.create_element ("style");
-            current_line.set_attribute ("name", "current-line");
-            current_line.set_attribute ("background", colors.selection_bg_color (darken_selection, 1));
-            root.append_child (current_line);
+            Xml.Node* current_line = new Xml.Node (ns, "style");
+            current_line->new_prop ("name", "current-line");
+            current_line->new_prop ("background", colors.selection_bg_color (darken_selection, 1));
+            root->add_child (current_line);
 
-            GXml.DomElement cursor = res.create_element ("style");
-            cursor.set_attribute ("name", "cursor");
-            cursor.set_attribute ("foreground", colors.cursor_color ());
-            root.append_child (cursor);
+            Xml.Node* cursor = new Xml.Node (ns, "style");
+            cursor->new_prop ("name", "cursor");
+            cursor->new_prop ("foreground", colors.cursor_color ());
+            root->add_child (cursor);
 
             // Add markdown stylings
             // print ("Converting style definitions\n");
@@ -527,27 +475,29 @@ namespace Ultheme {
                 if (_style_map.has_key (entry.key))
                 {
                     // print ("Creating comment for %s\n", entry.key);
-                    GXml.DomComment comment = res.create_comment ("Using " + entry.key + " for style");
+                    res->new_comment ("Using " + entry.key + " for style");
                     Attribute apply_attribute = entry.value;
-                    root.append_child (comment);
                     foreach (var apply in _style_map.get (entry.key).targets) {
                         // print ("Converting %s\n", entry.key);
-                        GXml.DomElement style = res.create_element ("style");
-                        style.set_attribute ("name", apply);
+                        Xml.Node* style = new Xml.Node (ns, "style");
+                        style->new_prop ("name", apply);
                         apply_attribute.add_attributes (ref style);
 
                         if (entry.key.contains ("head")) {
-                            style.set_attribute ("scale", "large");
+                            style->new_prop ("scale", "large");
                         }
 
-                        root.append_child (style);
+                        root->add_child (style);
                     }
                 }
             }
 
             // print ("Writing theme output\n");
+            string output_xml;
+            res->dump_memory_enc_format (out output_xml);
+            delete res;
 
-            return ((GXml.Document) res).write_string ();
+            return output_xml;
         }
 
         private void throw_on_failure (Archive.Result res) throws Error {
@@ -558,136 +508,6 @@ namespace Ultheme {
 
             throw new IOError.FILE_NOT_VALID_ARCHIVE(
                 "Could not read ultheme");
-        }
-
-        private class Attribute {
-            public Color foreground;
-            public Color background;
-            public bool is_bold;
-            public bool is_italic;
-            public bool is_underline;
-            public bool is_strikethrough;
-
-            public Attribute () {
-                is_bold = false;
-                is_italic = false;
-                is_underline = false;
-                is_strikethrough = false;
-            }
-
-            public string foreground_color () {
-                string fg = foreground.to_string ();
-                fg = fg.substring (0, 7);
-                return fg;
-            }
-
-            public string background_color () {
-                string bg = background.to_string ();
-                bg = bg.substring (0, 7);
-                return bg;
-            }
-
-            public void add_attributes (ref GXml.DomElement elem) {
-                try {
-                    if (is_bold) {
-                        elem.set_attribute ("bold", "true");
-                    }
-
-                    if (is_italic) {
-                        elem.set_attribute ("italic", "true");
-                    }
-
-                    if (is_underline) {
-                        elem.set_attribute ("underline", "true");
-                        elem.set_attribute ("underline-color", foreground_color ());
-                    }
-
-                    if (is_strikethrough) {
-                        elem.set_attribute ("strikethrough", "true");
-                    }
-
-                    elem.set_attribute ("background", background_color ());
-                    elem.set_attribute ("foreground", foreground_color ());
-                } catch (Error e) {
-                    warning ("Could not set attributes: %s", e.message);
-                }
-            }
-        }
-
-        private class ThemeColors {
-            public bool valid;
-            public Color foreground;
-            public Color background;
-            public Color[] _colors;
-            public HashMap<string, Attribute> elements;
-
-            public ThemeColors () {
-                valid = false;
-                elements = new HashMap<string, Attribute> ();
-            }
-
-            public string foreground_color () {
-                string fg = foreground.to_string ();
-                fg = fg.substring (0, 7);
-                return fg;
-            }
-
-            public string background_color () {
-                string bg = background.to_string ();
-                bg = bg.substring (0, 7);
-                return bg;
-            }
-
-            public string selection_bg_color (bool darken, int how_much = 1) {
-                Color selection = background;
-
-                while (how_much != 0) {
-                    if (darken) {
-                        selection = selection.darken ();
-                    } else {
-                        selection = selection.lighten ();
-                    }
-                    how_much--;
-                }
-
-                string sc = selection.to_string ();
-                sc = sc.substring (0, 7);
-                return sc;
-            }
-
-            public string selection_fg_color (bool darken, int how_much = 1) {
-                Color selection = foreground;
-
-                while (how_much != 0) {
-                    if (darken) {
-                        selection = selection.darken ();
-                    } else {
-                        selection = selection.lighten ();
-                    }
-                    how_much--;
-                }
-
-                string sc = selection.to_string ();
-                sc = sc.substring (0, 7);
-                return sc;
-            }
-
-            public string cursor_color () {
-                foreach (var entry in elements) {
-                    if (entry.key.has_prefix ("heading")) {
-                        return entry.value.foreground_color ();
-                    }
-                }
-
-                return foreground_color ();
-            }
-        }
-
-        private class StyleTargets {
-            public string[] targets;
-            public StyleTargets (string[] classes) {
-                targets = classes;
-            }
         }
     }
 }

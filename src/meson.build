@@ -6,6 +6,7 @@ endif
 
 libultheme_sources = [
   'Ultheme.vala',
+  'HexColors.vala'
 ]
 
 libultheme = build_target('ultheme',

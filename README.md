@@ -31,10 +31,9 @@ In your meson.build, add:
 
 ```
 ultheme_dep = dependency('ultheme-0.1', fallback : [ 'ultheme', 'libultheme_dep' ])
-gxml_dep = dependency('gxml-0.18', fallback : [ 'gxml', 'libgxml_dep' ])
 ```
 
-Then add ultheme_dep, gxml_dep, and dependency('clutter-1.0') to your dependencies.
+Then add ultheme_dep and dependency('clutter-1.0') to your dependencies.
 
 ### Parsing a Theme
 
