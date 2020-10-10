@@ -454,8 +454,8 @@ namespace Ultheme {
             // Come up with additional stylings not in file
             Xml.Node* search = new Xml.Node (ns, "style");
             search->new_prop ("name", "search-match");
-            search->new_prop ("foreground", colors.selection_fg_color (darken_selection, 1));
-            search->new_prop ("background", colors.selection_bg_color (darken_selection, 1));
+            search->new_prop ("foreground", colors.background_color ());
+            search->new_prop ("background", colors.cursor_color ());
             root->add_child (search);
 
             Xml.Node* selection = new Xml.Node (ns, "style");
