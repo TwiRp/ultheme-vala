@@ -99,28 +99,26 @@ namespace Ultheme {
         }
 
         public void add_attributes (ref Xml.Node* elem) {
-            try {
-                if (is_bold) {
-                    elem->new_prop ("bold", "true");
-                }
+            if (is_bold) {
+                elem->new_prop ("bold", "true");
+            }
 
-                if (is_italic) {
-                    elem->new_prop ("italic", "true");
-                }
+            if (is_italic) {
+                elem->new_prop ("italic", "true");
+            }
 
-                if (is_underline) {
-                    elem->new_prop ("underline", "true");
-                    elem->new_prop ("underline-color", foreground_color ());
-                }
+            if (is_underline) {
+                elem->new_prop ("underline", "true");
+                elem->new_prop ("underline-color", foreground_color ());
+            }
 
-                if (is_strikethrough) {
-                    elem->new_prop ("strikethrough", "true");
-                }
+            if (is_strikethrough) {
+                elem->new_prop ("strikethrough", "true");
+            }
 
+            elem->new_prop ("foreground", foreground_color ());
+            if (background.alpha != 0) {
                 elem->new_prop ("background", background_color ());
-                elem->new_prop ("foreground", foreground_color ());
-            } catch (Error e) {
-                warning ("Could not set attributes: %s", e.message);
             }
         }
     }

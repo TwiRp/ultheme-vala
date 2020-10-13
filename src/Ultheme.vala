@@ -224,6 +224,7 @@ namespace Ultheme {
 
                         Color foreground = color_theme.foreground;
                         Color background = color_theme.background;
+                        background.alpha = 0;
                         // Check for using default
                         if (fg_color >= 0 && fg_color < color_theme._colors.length) {
                             foreground = make_color (color_theme._colors[fg_color], fg_shade, color_theme.background, color_attr.down ().contains ("dark"), false);
@@ -489,7 +490,7 @@ namespace Ultheme {
                         style->new_prop ("name", apply);
                         apply_attribute.add_attributes (ref style);
 
-                        if (entry.key.contains ("head")) {
+                        if (apply == "markdown:header") {
                             style->new_prop ("scale", "large");
                         }
 
