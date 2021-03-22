@@ -48,7 +48,7 @@ namespace Ultheme {
             _style_map.set ("comment", new StyleTargets({ "markdown:backslash-escape", "def:special-char", "def:comment", "xml:attribute-value", }));
             _style_map.set ("blockquote", new StyleTargets({ "markdown:blockquote-marker", "def:shebang", "markdown:blockquote" }));
             _style_map.set ("link", new StyleTargets({ "markdown:link-text", "markdown:url", "markdown:label", "markdown:attribute-value", "def:underlined", "def:preprocessor", "def:constant", "def:net-address", "def:link-destination", "def:type" }));
-            _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break" }));
+            _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break", "def:thematic-break" }));
             _style_map.set ("orderedList", new StyleTargets({ "markdown:list-marker", "def:statement" }));
             _style_map.set ("image", new StyleTargets({ "markdown:image-marker", }));
             _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element", "def:emphasis" }));
