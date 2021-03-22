@@ -51,8 +51,8 @@ namespace Ultheme {
             _style_map.set ("divider", new StyleTargets({ "markdown:horizontal-rule", "def:note", "markdown:line-break" }));
             _style_map.set ("orderedList", new StyleTargets({ "markdown:list-marker", "def:statement" }));
             _style_map.set ("image", new StyleTargets({ "markdown:image-marker", }));
-            _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element" }));
-            _style_map.set ("strong", new StyleTargets({ "markdown:strong-emphasis", "def:statement" }));
+            _style_map.set ("emph", new StyleTargets({ "markdown:emphasis", "def:doc-comment-element", "def:emphasis" }));
+            _style_map.set ("strong", new StyleTargets({ "markdown:strong-emphasis", "def:statement", "def:strong-emphasis" }));
             _style_map.set ("delete", new StyleTargets({ "def:deletion" }));
 
             read_theme ();
