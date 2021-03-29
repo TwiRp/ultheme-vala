@@ -149,6 +149,7 @@ namespace Ultheme {
         public HexColorPair image_marker { get; set; }
         public HexColorPair emphasis { get; set; }
         public HexColorPair strong { get; set; }
+        public HexColorPair deletion { get; set; }
 
         public HexColorPalette () {
             global = new HexColorPair ();
@@ -164,6 +165,7 @@ namespace Ultheme {
             image_marker = new HexColorPair ();
             emphasis = new HexColorPair ();
             strong = new HexColorPair ();
+            deletion = new HexColorPair ();
         }
     }
 }

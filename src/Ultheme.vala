@@ -422,6 +422,12 @@ namespace Ultheme {
                 palette.emphasis.foreground = attr.foreground_color ();
                 palette.emphasis.background = attr.background_color ();
             }
+
+            if (colors.elements.has_key ("delete")) {
+                Attribute attr = colors.elements.get ("delete");
+                palette.deletion.foreground = attr.foreground_color ();
+                palette.deletion.background = attr.background_color ();
+            }
         }
 
         private string build_style (
