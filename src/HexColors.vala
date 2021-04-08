@@ -2,7 +2,7 @@ using Clutter;
 using Gee;
 
 namespace Ultheme {
-    private class ThemeColors {
+    private class ThemeColors : Object {
         public bool valid;
         public Color foreground;
         public Color background;
@@ -71,7 +71,7 @@ namespace Ultheme {
         }
     }
 
-    private class Attribute {
+    private class Attribute : Object {
         public Color foreground;
         public Color background;
         public bool is_bold;
@@ -123,19 +123,19 @@ namespace Ultheme {
         }
     }
 
-    private class StyleTargets {
+    private class StyleTargets : Object {
         public string[] targets;
         public StyleTargets (string[] classes) {
             targets = classes;
         }
     }
 
-    public class HexColorPair {
+    public class HexColorPair : Object {
         public string foreground { get; set; }
         public string background { get; set; }
     }
 
-    public class HexColorPalette {
+    public class HexColorPalette : Object {
         public HexColorPair global { get; set; }
         public HexColorPair global_active { get; set; }
         public HexColorPair headers { get; set; }

@@ -8,7 +8,7 @@ errordomain IOError {
 }
 
 namespace Ultheme {
-    public class Parser {
+    public class Parser : Object {
         private string _author;
         private string _name;
         private string _version;
@@ -488,7 +488,6 @@ namespace Ultheme {
                 if (_style_map.has_key (entry.key))
                 {
                     // print ("Creating comment for %s\n", entry.key);
-                    res->new_comment ("Using " + entry.key + " for style");
                     Attribute apply_attribute = entry.value;
                     foreach (var apply in _style_map.get (entry.key).targets) {
                         // print ("Converting %s\n", entry.key);
@@ -515,7 +514,8 @@ namespace Ultheme {
 
         private void throw_on_failure (Archive.Result res) throws Error {
             if ((res == Archive.Result.OK) ||
-                (res == Archive.Result.WARN)) {
+                (res == Archive.Result.WARN))
+            {
                 return;
             }
 
