@@ -35,8 +35,6 @@ namespace Ultheme {
                 _xml_buffer = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + _xml_buffer;
             }
 
-            // stdout.// printf("Parsing Document:\n===\n%s\n===\n", _xml_buffer);
-
             _dark_theme = new ThemeColors ();
             _light_theme = new ThemeColors ();
 
@@ -138,8 +136,6 @@ namespace Ultheme {
                     }
                 }
             }
-
-            // print ("Theme fg: %s, gb: %s\n", color_theme.foreground_color (), color_theme.background_color ());
 
             // Read the style definitions
             for (Xml.Node* item = root->children; item != null; item = item->next) {
@@ -434,12 +430,10 @@ namespace Ultheme {
             string name_suffix,
             ThemeColors colors,
             bool darken_selection) throws Error {
-            // print ("Generating theme\n");
             Xml.Doc* res = new Xml.Doc ("1.0");
             Xml.Ns* ns = new Xml.Ns (null, "", null);
 
             // Create scheme
-            // print ("Creating root\n");
             Xml.Node* root = new Xml.Node (ns, "style-scheme");
             root->new_prop ("id", "ulv-" + _name.down () + "-" + name_suffix.down ());
             root->new_prop ("name", _name + "-" + name_suffix + "-ulv");
@@ -447,7 +441,6 @@ namespace Ultheme {
             res->set_root_element (root);
 
             // Add frontmatter
-            // print ("Adding frontmatter\n");
             root->new_text_child (ns, "author", _author);
             root->new_text_child (ns, "description", "Style Scheme converted from Ulysses Theme " + _name);
 
@@ -482,15 +475,11 @@ namespace Ultheme {
             root->add_child (cursor);
 
             // Add markdown stylings
-            // print ("Converting style definitions\n");
             foreach (var entry in colors.elements) {
-                // print ("Checking %s\n", entry.key);
                 if (_style_map.has_key (entry.key))
                 {
-                    // print ("Creating comment for %s\n", entry.key);
                     Attribute apply_attribute = entry.value;
                     foreach (var apply in _style_map.get (entry.key).targets) {
-                        // print ("Converting %s\n", entry.key);
                         Xml.Node* style = new Xml.Node (ns, "style");
                         style->new_prop ("name", apply);
                         apply_attribute.add_attributes (ref style);
@@ -504,10 +493,10 @@ namespace Ultheme {
                 }
             }
 
-            // print ("Writing theme output\n");
             string output_xml;
             res->dump_memory_enc_format (out output_xml);
             delete res;
+            delete ns;
 
             return output_xml;
         }
