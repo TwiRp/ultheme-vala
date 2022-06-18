@@ -11,7 +11,6 @@ Allows you to convert [Ulysses Editor Themes](https://styles.ulysses.app/themes)
 ```
 valac
 libarchive-dev
-libclutter-1.0-dev
 libxml2-dev
 ```
 

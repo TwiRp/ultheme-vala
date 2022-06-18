@@ -2,17 +2,7 @@ using Gtk;
 using Gdk;
 
 public class HelloUltheme : Gtk.Application {
-    public enum Target {
-        STRING,
-        URI
-    }
-
-    public const TargetEntry[] target_list = {
-        { "STRING" , 0, Target.STRING },
-        { "text/uri-list", 0, Target.URI }
-    };
-
-    public static Gtk.SourceStyleSchemeManager preview_manager;
+    public static GtkSource.StyleSchemeManager preview_manager;
     public static string temp_dir;
     public static Gtk.FlowBox preview_items;
 
@@ -37,34 +27,30 @@ public class HelloUltheme : Gtk.Application {
             }
         }
 
-        preview_manager = new Gtk.SourceStyleSchemeManager ();
+        preview_manager = new GtkSource.StyleSchemeManager ();
         preview_manager.append_search_path (temp_dir);
 
         var app_box = new Gtk.Paned (Gtk.Orientation.VERTICAL);
 
-        var preview_box = new Gtk.ScrolledWindow (null, null);
+        var preview_box = new Gtk.ScrolledWindow ();
         preview_items = new Gtk.FlowBox ();
-        //preview_items = new Gtk.Grid ();
-        preview_items.margin = 6;
-        //preview_items.orientation = Gtk.Orientation.HORIZONTAL;
-        preview_box.add (preview_items);
-
-        /*PreviewWidget twidge = new PreviewWidget ();
-        preview_items.add (twidge);*/
+        preview_items.column_spacing = 6;
+        preview_items.row_spacing = 6;
+        preview_box.set_child (preview_items);
 
         PreviewDrop drop_box = new PreviewDrop ();
-        drop_box.show_all ();
+        drop_box.show ();
 
-        app_box.add1 (drop_box);
-        app_box.add2 (preview_box);
+        app_box.set_start_child (drop_box);
+        app_box.set_end_child (preview_box);
         app_box.hexpand = true;
 
-        window.add (app_box);
+        window.set_child (app_box);
 
         shutdown.connect (on_delete_event);
 
-        window.show_all ();
-        app_box.set_position (drop_box.get_allocated_height ());
+        window.show ();
+        app_box.set_position (drop_box.get_allocated_height () > 200 ? drop_box.get_allocated_height () : 200);
     }
 
     public void on_delete_event () {
@@ -100,97 +86,44 @@ public class HelloUltheme : Gtk.Application {
         return new HelloUltheme ().run (args);
     }
 
-    private class PreviewDrop : Gtk.Label {
+    private class PreviewDrop : Gtk.Box {
+        private Gtk.Label label;
         construct {
-            label = "  Drop Style.ultheme here to generate preview\n\n\n\n\n";
+            var layout = new Gtk.BoxLayout (Gtk.Orientation.VERTICAL);
+            layout.spacing = 30;
+            layout.homogeneous = false;
+            this.set_layout_manager (layout);
+
+            label = new Gtk.Label("  Drop Style.ultheme here to generate preview\n\n\n\n\n");
+
+            append(label);
 
             // Drag and Drop Support
-            Gtk.drag_dest_set (
-                this,                        // widget will be drag-able
-                DestDefaults.ALL,              // modifier that will start a drag
-                target_list,                   // lists of target to support
-                Gdk.DragAction.COPY            // what to do with data after dropped
-            );
-            this.drag_motion.connect(this.on_drag_motion);
-            this.drag_leave.connect(this.on_drag_leave);
-            this.drag_drop.connect(this.on_drag_drop);
-            this.drag_data_received.connect(this.on_drag_data_received);
-            show_all ();
+            Gtk.DropTarget target = new Gtk.DropTarget (Type.INVALID, Gdk.DragAction.COPY);
+            target.set_gtypes ({ typeof (File), typeof (string) });
+            target.on_drop.connect (on_drag_data_received);
+            label.add_controller (target);
+            show ();
         }
 
-        private bool on_drag_motion (
-            Widget widget,
-            DragContext context,
-            int x,
-            int y,
-            uint time)
-        {
-            // set_shadow_type (Gtk.ShadowType.ETCHED_OUT);
-            return false;
+        public int get_allocated_height () {
+            return base.get_allocated_height () + label.get_allocated_height ();
         }
 
-        private void on_drag_leave (Widget widget, DragContext context, uint time) {
-            // set_shadow_type (Gtk.ShadowType.ETCHED_IN);
-        }
-
-        private bool on_drag_drop (
-            Widget widget,
-            DragContext context,
-            int x,
-            int y,
-            uint time)
-        {
-            var target_type = (Atom) context.list_targets().nth_data (Target.STRING);
-
-            if (!target_type.name ().ascii_up ().contains ("STRING"))
-            {
-                target_type = (Atom) context.list_targets().nth_data (Target.URI);
-            }
-
-            // Request the data from the source.
-            Gtk.drag_get_data (
-                widget,         // will receive 'drag_data_received' signal
-                context,        // represents the current state of the DnD
-                target_type,    // the target type we want
-                time            // time stamp
-                );
-
-            bool is_valid_drop_site = target_type.name ().ascii_up ().contains ("STRING") || target_type.name ().ascii_up ().contains ("URI");
-
-            return is_valid_drop_site;
-        }
-
-        private void on_drag_data_received (
-            Widget widget,
-            DragContext context,
-            int x,
-            int y,
-            SelectionData selection_data,
-            uint target_type,
-            uint time)
+        private bool on_drag_data_received (
+            Value value,
+            double x,
+            double y)
         {
             string file_to_parse = "";
-            File file;
+            File file = null;
 
-            // Check that we got the format we can use
-            switch (target_type)
-            {
-                case Target.URI:
-                    file_to_parse = (string) selection_data.get_data();
-                break;
-                case Target.STRING:
-                    file_to_parse = (string) selection_data.get_data();
-                break;
-                default:
-                    print ("Invalid data type\n");
-                break;
-            }
+            if (value.type () == typeof (File)) {
+                file = (File)value;
+            } else if (value.type () == typeof (string)) {
+                file_to_parse = (string) value;
+                file_to_parse = file_to_parse.chomp ();
 
-            file_to_parse = file_to_parse.chomp ();
-            print ("Parsing %s\n", file_to_parse);
-
-            if (file_to_parse != "")
-            {
                 if (file_to_parse.has_prefix ("file"))
                 {
                     print ("Removing file prefix for %s\n", file_to_parse.chomp ());
@@ -199,8 +132,7 @@ public class HelloUltheme : Gtk.Application {
                     if ((check_path == null) || (check_path.chomp () == ""))
                     {
                         print ("Not a local file\n");
-                        Gtk.drag_finish (context, false, false, time);
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -208,14 +140,14 @@ public class HelloUltheme : Gtk.Application {
                         print ("Result path: %s\n", file_to_parse);
                     }
                 }
+                file = File.new_for_path (file_to_parse);
+            } else {
+                return false;
             }
-
-            file = File.new_for_path (file_to_parse);
 
             if (!file.query_exists ()) {
                 print ("Target file (%s) does not exist\n", file.get_path ());
-                Gtk.drag_finish (context, false, false, time);
-                return;
+                return false;
             }
 
             print ("Decoding %s\n", file.get_path ());
@@ -236,7 +168,7 @@ public class HelloUltheme : Gtk.Application {
                     dark_widget.set_scheme (dark_theme_id);
                     new_styles.get_dark_theme_palette (out dark_widget.palette);
                     dark_widget.set_text (preview_text);
-                    preview_items.add (dark_widget);
+                    preview_items.append (dark_widget);
                     print ("Added %s\n", dark_theme_id);
                 }
 
@@ -253,11 +185,11 @@ public class HelloUltheme : Gtk.Application {
                     light_widget.set_scheme (light_theme_id);
                     new_styles.get_light_theme_palette (out light_widget.palette);
                     light_widget.set_text (preview_text);
-                    preview_items.add (light_widget);
+                    preview_items.append (light_widget);
                     print ("Added %s\n", light_theme_id);
                 }
 
-                preview_items.show_all ();
+                preview_items.show ();
 
             } catch (Error e) {
                 print ("Failing generating preview: %s\n", e.message);
@@ -265,7 +197,7 @@ public class HelloUltheme : Gtk.Application {
 
             print ("Done\n");
 
-            Gtk.drag_finish (context, true, false, time);
+            return true;
         }
 
         private string preview_text (string name) {
@@ -283,8 +215,8 @@ print ("hello world")
     }
 
     private class PreviewWidget : Gtk.Button {
-        private Gtk.SourceView view;
-        private Gtk.SourceBuffer buffer;
+        private GtkSource.View view;
+        private GtkSource.Buffer buffer;
         private string scheme_id;
         public Ultheme.HexColorPalette palette;
         private const string SAMPLE_TEXT = """# Heading
@@ -293,20 +225,18 @@ Body text.
 > Blockquote""";
 
         public PreviewWidget () {
-            var manager = Gtk.SourceLanguageManager.get_default ();
+            var manager = GtkSource.LanguageManager.get_default ();
             var language = manager.guess_language (null, "text/markdown");
-            margin = 0;
-            view = new Gtk.SourceView ();
-            view.margin = 0;
-            buffer = new Gtk.SourceBuffer.with_language (language);
+            view = new GtkSource.View ();
+            buffer = new GtkSource.Buffer.with_language (language);
             buffer.highlight_syntax = true;
             view.editable = false;
             view.set_buffer (buffer);
             view.set_wrap_mode (Gtk.WrapMode.NONE);
             buffer.text = SAMPLE_TEXT;
-            add (view);
+            set_child (view);
 
-            show_all ();
+            show ();
         }
 
         public void set_text (string text) {
