@@ -1,4 +1,3 @@
-using Clutter;
 using Gee;
 
 errordomain IOError {
